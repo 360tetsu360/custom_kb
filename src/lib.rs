@@ -60,7 +60,7 @@ unsafe fn start() {
     }
 
     let base = memory::module_base_addres();
-    let fn_pointer: LPVOID = std::mem::transmute::<u64, LPVOID>(base + 0x1DCAB50);
+    let fn_pointer: LPVOID = std::mem::transmute::<u64, LPVOID>(base + 0x1DCAB50); 
 
     let cc = std::mem::transmute::<*mut u64, *mut LPVOID>(&mut BACK_TO_FUNCTION);
 

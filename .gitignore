@@ -1,5 +1,4 @@
 /target
 Cargo.lock
-/minhook/native/libMinHook.lib
-/minhook/native/MinHook.h
+/minhook/native
 /packages

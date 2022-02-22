@@ -1,5 +1,4 @@
 use kernel32::FreeLibraryAndExitThread;
-use memory::force_cast;
 use minhook::{
     MH_CreateHook, MH_EnableHook, MH_Initialize, MH_Uninitialize, MH_STATUS, MH_STATUS_MH_OK,
 };
@@ -39,18 +38,16 @@ struct Vec3 {
     z: f32,
 }
 
-type Hook = unsafe extern "fastcall" fn(addr: u64, val: u64);
+type Hook = unsafe extern "fastcall" fn(u64, *mut Vec3);
+unsafe extern "fastcall" fn _callback(_: u64, _: *mut Vec3) {}
+static mut BACK_TO_FUNCTION: Hook = _callback;
 
-static mut BACK_TO_FUNCTION: u64 = 0;
+unsafe extern "fastcall" fn callback(addr: u64, velocity: *mut Vec3) {
+    (*velocity).x *= 1.5;
+    (*velocity).y *= 1.5;
+    (*velocity).z *= 1.5;
 
-unsafe extern "fastcall" fn callback(addr: u64, val: u64) {
-    let velocity = force_cast::<Vec3>(val);
-    (*velocity).x *= 2.;
-    (*velocity).y *= 2.;
-    (*velocity).z *= 2.;
-
-    let function1 = std::mem::transmute::<u64, Hook>(BACK_TO_FUNCTION);
-    function1(addr, val);
+    BACK_TO_FUNCTION(addr,velocity);
 }
 
 unsafe fn start() {
@@ -62,7 +59,7 @@ unsafe fn start() {
     let base = memory::module_base_addres();
     let fn_pointer: LPVOID = std::mem::transmute::<u64, LPVOID>(base + 0x1DCAB50); 
 
-    let cc = std::mem::transmute::<*mut u64, *mut LPVOID>(&mut BACK_TO_FUNCTION);
+    let cc = std::mem::transmute::<*mut Hook, *mut LPVOID>(&mut BACK_TO_FUNCTION);
 
     let status: MH_STATUS = MH_CreateHook(fn_pointer, callback as *mut winapi::c_void, cc);
     if status != MH_STATUS_MH_OK {
